@@ -1,0 +1,27 @@
+# Claude
+.claude/
+.omc/
+CLAUDE.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Node (if needed later)
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Excel temp files
+~$*.xlsx
