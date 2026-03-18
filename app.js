@@ -19,7 +19,7 @@ async function loadData() {
   APP.data = await resp.json();
   buildCards();
   loadProgress();
-  render();
+  shuffle();
 }
 
 // ===== Build unified card list =====
