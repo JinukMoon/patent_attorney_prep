@@ -195,7 +195,7 @@ function render() {
           <div class="reveal-zone answer-zone ${APP.answerShown ? 'visible' : ''}">
             <div class="zone-inner">
               <div class="zone-tag">Answer</div>
-              ${card.요약 ? `<div class="answer-text summary-answer">${esc(card.요약)}</div>` : ''}
+              ${card.요약 ? `<div class="answer-text summary-answer">${highlightAcronym(card.요약, card.두문자)}</div>` : ''}
               ${card.상세 ? `
                 ${card.요약 ? '<div class="answer-divider"></div>' : ''}
                 <div class="answer-text">${highlightAcronym(card.상세, card.두문자)}</div>
