@@ -19,76 +19,71 @@ async function loadData() {
   shuffle();
 }
 
-// ===== Build unified card list =====
+// ===== Build card list =====
 function buildCards() {
   const d = APP.data;
-  const merged = new Map();
+  const cards = [];
 
+  // 간략: each entry becomes 2 cards (의의/취지 + 요건), grouped as a pair
   for (const item of d.간략) {
-    const key = item.id;
-    merged.set(key, {
-      key, 조문번호: item.id, 요약: item.요약, 취지: item.취지,
-      두문자: item.두문자 || '', 상세: '', 문장: '', sources: ['간략'],
+    const pairId = 'pair-' + item.id;
+
+    // Card 1: 의의/취지
+    if (item.취지) {
+      cards.push({
+        key: item.id + '-취지',
+        pairId,
+        조문번호: item.id,
+        문제유형: '의의/취지',
+        두문자: '',
+        정답: item.취지,
+        sources: ['간략'],
+      });
+    }
+
+    // Card 2: 요건
+    if (item.요건) {
+      cards.push({
+        key: item.id + '-요건',
+        pairId,
+        조문번호: item.id,
+        문제유형: '요건',
+        두문자: item.두문자 || '',
+        정답: item.요건,
+        sources: ['간략'],
+      });
+    }
+  }
+
+  // 두문자: each entry is a single card
+  for (const item of d.두문자) {
+    cards.push({
+      key: '두문자-' + item.id,
+      pairId: null,
+      조문번호: item.id,
+      문제유형: '두문자',
+      두문자: item.두문자,
+      정답: item.상세,
+      sources: ['두문자'],
     });
   }
 
-  for (const item of d.두문자) {
-    const key = item.id;
-    const baseKey = findMatchingKey(merged, key);
-    if (baseKey) {
-      const card = merged.get(baseKey);
-      if (!card.두문자) {
-        card.두문자 = item.두문자;
-        card.상세 = item.상세;
-        card.sources.push('두문자');
-      } else {
-        merged.set(key, {
-          key, 조문번호: item.id, 요약: '', 취지: '',
-          두문자: item.두문자, 상세: item.상세, 문장: '', sources: ['두문자'],
-        });
-      }
-    } else {
-      merged.set(key, {
-        key, 조문번호: item.id, 요약: '', 취지: '',
-        두문자: item.두문자, 상세: item.상세, 문장: '', sources: ['두문자'],
-      });
-    }
-  }
-
-  for (const item of d.문장) {
-    const key = item.id;
-    const baseKey = findMatchingKey(merged, key);
-    if (baseKey) {
-      merged.get(baseKey).문장 = item.문장;
-      merged.get(baseKey).sources.push('문장');
-    } else {
-      merged.set(key, {
-        key, 조문번호: item.id, 요약: '', 취지: '',
-        두문자: '', 상세: '', 문장: item.문장, sources: ['문장'],
-      });
-    }
-  }
-
-  APP.allCards = Array.from(merged.values());
+  APP.allCards = cards;
   applyFilters();
 }
 
 function findMatchingKey(map, searchId) {
   if (map.has(searchId)) return searchId;
-
   const normalize = (s) => {
     const nums = s.match(/\d+/g) || [];
     const hasFront = /전/.test(s);
     const hasBack = /후/.test(s);
     return nums.join('-') + (hasFront ? '-전' : '') + (hasBack ? '-후' : '');
   };
-
   const searchNorm = normalize(searchId);
   if (!searchNorm || searchNorm === '') return null;
-
   const searchNums = searchId.match(/\d+/g) || [];
   if (searchNums.length < 2) return null;
-
   for (const [key] of map) {
     const keyNums = key.match(/\d+/g) || [];
     if (keyNums.length < 2) continue;
@@ -100,19 +95,48 @@ function findMatchingKey(map, searchId) {
 // ===== Filters =====
 function applyFilters() {
   let cards = [...APP.allCards];
-  if (APP.mode !== 'all') {
-    cards = cards.filter(c => c.sources.includes(APP.mode));
+  if (APP.mode === '간략') {
+    cards = cards.filter(c => c.sources.includes('간략'));
+  } else if (APP.mode === '두문자') {
+    cards = cards.filter(c => c.sources.includes('두문자'));
   }
   APP.cards = cards;
   APP.idx = Math.min(APP.idx, Math.max(0, cards.length - 1));
 }
 
-// ===== Shuffle =====
+// ===== Shuffle (pairs stay together) =====
 function shuffle() {
-  for (let i = APP.cards.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [APP.cards[i], APP.cards[j]] = [APP.cards[j], APP.cards[i]];
+  // Group cards into pairs and singles
+  const pairs = [];
+  const singles = [];
+  const seenPairs = new Set();
+
+  for (let i = 0; i < APP.cards.length; i++) {
+    const card = APP.cards[i];
+    if (card.pairId && !seenPairs.has(card.pairId)) {
+      seenPairs.add(card.pairId);
+      const pair = APP.cards.filter(c => c.pairId === card.pairId);
+      // Sort: 의의/취지 first, then 요건
+      pair.sort((a, b) => {
+        if (a.문제유형 === '의의/취지') return -1;
+        if (b.문제유형 === '의의/취지') return 1;
+        return 0;
+      });
+      pairs.push(pair);
+    } else if (!card.pairId) {
+      singles.push([card]);
+    }
   }
+
+  // Shuffle groups
+  const groups = [...pairs, ...singles];
+  for (let i = groups.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [groups[i], groups[j]] = [groups[j], groups[i]];
+  }
+
+  // Flatten
+  APP.cards = groups.flat();
   APP.shuffled = true;
   APP.idx = 0;
   resetReveal();
@@ -164,7 +188,17 @@ function render() {
   }
 
   const hasHint = !!card.두문자;
-  const hasAnswer = card.요약 || card.문장 || card.상세;
+  const hasAnswer = !!card.정답;
+
+  // Question type badge color
+  let typeBadge = '';
+  if (card.문제유형 === '의의/취지') {
+    typeBadge = '<span class="type-badge purpose">의의/취지</span>';
+  } else if (card.문제유형 === '요건') {
+    typeBadge = '<span class="type-badge requirement">요건</span>';
+  } else if (card.문제유형 === '두문자') {
+    typeBadge = '<span class="type-badge mnemonic">두문자</span>';
+  }
 
   app.innerHTML = `
     ${renderHeader()}
@@ -176,11 +210,10 @@ function render() {
       <div class="card-inner">
         <div class="card-counter">
           <span class="card-idx">${APP.idx + 1} / ${APP.cards.length}</span>
+          ${typeBadge}
         </div>
 
         <div class="card-title">${esc(card.조문번호)}</div>
-
-        ${card.취지 ? `<div class="card-purpose">${esc(card.취지)}</div>` : ''}
 
         ${hasHint ? `
           <div class="reveal-zone hint-zone ${APP.hintShown ? 'visible' : ''}">
@@ -195,15 +228,7 @@ function render() {
           <div class="reveal-zone answer-zone ${APP.answerShown ? 'visible' : ''}">
             <div class="zone-inner">
               <div class="zone-tag">Answer</div>
-              ${card.요약 ? `<div class="answer-text summary-answer">${highlightAcronym(card.요약, card.두문자)}</div>` : ''}
-              ${card.상세 ? `
-                ${card.요약 ? '<div class="answer-divider"></div>' : ''}
-                <div class="answer-text">${highlightAcronym(card.상세, card.두문자)}</div>
-              ` : ''}
-              ${card.문장 && card.문장 !== card.상세 ? `
-                <div class="answer-divider"></div>
-                <div class="answer-text">${esc(card.문장)}</div>
-              ` : ''}
+              <div class="answer-text">${highlightAcronym(card.정답, card.두문자)}</div>
             </div>
           </div>
         ` : ''}
@@ -244,7 +269,6 @@ function renderModeTabs() {
     ['all', '전체'],
     ['간략', '조문'],
     ['두문자', '두문자'],
-    ['문장', '문장'],
   ];
   return `
     <div class="mode-tabs">
@@ -257,13 +281,11 @@ function renderModeTabs() {
 
 function renderActionButtons(hasHint, hasAnswer) {
   let html = '';
-
   if (!APP.hintShown && hasHint) {
     html += `<button class="reveal-btn hint" id="btn-hint">힌트 보기</button>`;
   } else if (!APP.answerShown && hasAnswer) {
     html += `<button class="reveal-btn answer" id="btn-answer">정답 보기</button>`;
   }
-
   return html;
 }
 
@@ -274,7 +296,7 @@ function attachEvents() {
       APP.idx = 0;
       resetReveal();
       applyFilters();
-      render();
+      shuffle();
     });
   });
 
@@ -332,10 +354,10 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     const card = APP.cards[APP.idx];
     if (!card) return;
-    if (!APP.hintShown && (card.두문자 || card.요약)) {
+    if (!APP.hintShown && card.두문자) {
       APP.hintShown = true;
       render();
-    } else if (!APP.answerShown && (card.문장 || card.상세)) {
+    } else if (!APP.answerShown && card.정답) {
       APP.answerShown = true;
       render();
     } else {

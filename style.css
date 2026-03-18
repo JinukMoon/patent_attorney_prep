@@ -284,6 +284,29 @@ body {
   letter-spacing: 0.3px;
 }
 
+.type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.type-badge.purpose {
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+
+.type-badge.requirement {
+  background: var(--teal-dim);
+  color: var(--teal);
+}
+
+.type-badge.mnemonic {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
 .card-status {
   width: 8px;
   height: 8px;
