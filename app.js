@@ -190,7 +190,7 @@ function render() {
   const hasHint = !!card.두문자;
   const hasAnswer = !!card.정답;
 
-  const titleSuffix = card.문제유형 ? ` - ${card.문제유형}` : '';
+  const titleSuffix = card.문제유형 ? ` — ${card.문제유형}` : '';
 
   app.innerHTML = `
     ${renderHeader()}
