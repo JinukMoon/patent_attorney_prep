@@ -8,8 +8,6 @@ const APP = {
   hintShown: false,
   answerShown: false,
   mode: 'all',
-  filter: 'all',
-  known: {},
   shuffled: false,
 };
 
@@ -18,7 +16,6 @@ async function loadData() {
   const resp = await fetch('data/상표법_암기자료.json');
   APP.data = await resp.json();
   buildCards();
-  loadProgress();
   shuffle();
 }
 
@@ -106,9 +103,6 @@ function applyFilters() {
   if (APP.mode !== 'all') {
     cards = cards.filter(c => c.sources.includes(APP.mode));
   }
-  if (APP.filter === 'wrong') {
-    cards = cards.filter(c => APP.known[c.key] === false);
-  }
   APP.cards = cards;
   APP.idx = Math.min(APP.idx, Math.max(0, cards.length - 1));
 }
@@ -130,24 +124,6 @@ function resetReveal() {
   APP.answerShown = false;
 }
 
-// ===== Progress =====
-function saveProgress() {
-  try { localStorage.setItem('trademark-quiz-known', JSON.stringify(APP.known)); } catch(e) {}
-}
-
-function loadProgress() {
-  try {
-    const saved = localStorage.getItem('trademark-quiz-known');
-    if (saved) APP.known = JSON.parse(saved);
-  } catch(e) {}
-}
-
-function resetProgress() {
-  APP.known = {};
-  saveProgress();
-  render();
-}
-
 // ===== Navigation =====
 function goNext() {
   if (APP.idx < APP.cards.length - 1) {
@@ -165,15 +141,6 @@ function goPrev() {
   }
 }
 
-function markKnow(val) {
-  const card = APP.cards[APP.idx];
-  if (card) {
-    APP.known[card.key] = val;
-    saveProgress();
-  }
-  goNext();
-}
-
 // ===== Render =====
 function render() {
   const app = document.getElementById('app');
@@ -188,27 +155,20 @@ function render() {
     app.innerHTML = `
       ${renderHeader()}
       ${renderModeTabs()}
-      ${renderFilterBar()}
       <div class="empty-state">
-        <p>${APP.filter === 'wrong' ? '틀린 카드가 없습니다.' : '카드가 없습니다.'}</p>
+        <p>카드가 없습니다.</p>
       </div>
     `;
     attachEvents();
     return;
   }
 
-  const knownStatus = APP.known[card.key];
   const hasHint = card.두문자 || card.요약;
   const hasAnswer = card.문장 || card.상세;
-
-  let statusClass = '';
-  if (knownStatus === true) statusClass = 'known';
-  else if (knownStatus === false) statusClass = 'unknown';
 
   app.innerHTML = `
     ${renderHeader()}
     ${renderModeTabs()}
-    ${renderFilterBar()}
     <div class="progress-track">
       <div class="progress-fill" style="width:${((APP.idx + 1) / APP.cards.length * 100).toFixed(1)}%"></div>
     </div>
@@ -216,7 +176,6 @@ function render() {
       <div class="card-inner">
         <div class="card-counter">
           <span class="card-idx">${APP.idx + 1} / ${APP.cards.length}</span>
-          <span class="card-status ${statusClass}"></span>
         </div>
 
         <div class="card-title">${esc(card.조문번호)}</div>
@@ -264,22 +223,14 @@ function render() {
 }
 
 function renderHeader() {
-  const knownCount = Object.values(APP.known).filter(v => v === true).length;
-  const wrongCount = Object.values(APP.known).filter(v => v === false).length;
-
   return `
     <div class="header">
       <div class="header-brand">
         <h1>상표법</h1>
         <span class="badge">2026</span>
       </div>
-      <div class="header-stats">
-        ${knownCount > 0 ? `<span class="stat-pill correct"><span class="dot"></span>${knownCount}</span>` : ''}
-        ${wrongCount > 0 ? `<span class="stat-pill wrong"><span class="dot"></span>${wrongCount}</span>` : ''}
-      </div>
       <div class="header-actions">
         <button class="icon-btn" onclick="shuffle()" title="셔플">⟳</button>
-        <button class="icon-btn" onclick="if(confirm('진행상황을 초기화할까요?'))resetProgress()" title="초기화">✕</button>
       </div>
     </div>
   `;
@@ -301,16 +252,6 @@ function renderModeTabs() {
   `;
 }
 
-function renderFilterBar() {
-  const wrongCount = Object.values(APP.known).filter(v => v === false).length;
-  return `
-    <div class="filter-bar">
-      <button class="filter-chip ${APP.filter === 'all' ? 'active' : ''}" data-filter="all">전체</button>
-      ${wrongCount > 0 ? `<button class="filter-chip ${APP.filter === 'wrong' ? 'active' : ''}" data-filter="wrong">오답 ${wrongCount}</button>` : ''}
-    </div>
-  `;
-}
-
 function renderActionButtons(hasHint, hasAnswer) {
   let html = '';
 
@@ -320,15 +261,6 @@ function renderActionButtons(hasHint, hasAnswer) {
     html += `<button class="reveal-btn answer" id="btn-answer">정답 보기</button>`;
   }
 
-  if (APP.answerShown || (!hasHint && !hasAnswer)) {
-    html += `
-      <div class="judge-row">
-        <button class="judge-btn fail" onclick="markKnow(false)">모르겠음</button>
-        <button class="judge-btn pass" onclick="markKnow(true)">알겠음</button>
-      </div>
-    `;
-  }
-
   return html;
 }
 
@@ -336,16 +268,6 @@ function attachEvents() {
   document.querySelectorAll('.mode-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       APP.mode = btn.dataset.mode;
-      APP.idx = 0;
-      resetReveal();
-      applyFilters();
-      render();
-    });
-  });
-
-  document.querySelectorAll('.filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      APP.filter = btn.dataset.filter;
       APP.idx = 0;
       resetReveal();
       applyFilters();
@@ -397,10 +319,6 @@ document.addEventListener('keydown', (e) => {
     }
   } else if (e.key === 'ArrowLeft') {
     goPrev();
-  } else if (e.key === '1') {
-    markKnow(false);
-  } else if (e.key === '2') {
-    markKnow(true);
   }
 });
 
