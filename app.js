@@ -202,7 +202,7 @@ function render() {
       <div class="card-inner">
         <div class="card-counter">
           <span class="card-idx">${APP.idx + 1} / ${APP.cards.length}</span>
-          ${card.문제유형 === '두문자' ? '<span class="type-badge mnemonic">두문자</span>' : ''}
+          ${card.sources.includes('두문자') ? '<span class="type-badge mnemonic">두문자 암기자료</span>' : '<span class="type-badge purpose">의의취지요건 암기자료</span>'}
         </div>
 
         <div class="card-title">${esc(card.조문번호)}${esc(titleSuffix)}</div>
