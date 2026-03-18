@@ -190,15 +190,7 @@ function render() {
   const hasHint = !!card.두문자;
   const hasAnswer = !!card.정답;
 
-  // Question type badge color
-  let typeBadge = '';
-  if (card.문제유형 === '의의/취지') {
-    typeBadge = '<span class="type-badge purpose">의의/취지</span>';
-  } else if (card.문제유형 === '요건') {
-    typeBadge = '<span class="type-badge requirement">요건</span>';
-  } else if (card.문제유형 === '두문자') {
-    typeBadge = '<span class="type-badge mnemonic">두문자</span>';
-  }
+  const titleSuffix = card.문제유형 ? ` - ${card.문제유형}` : '';
 
   app.innerHTML = `
     ${renderHeader()}
@@ -210,10 +202,9 @@ function render() {
       <div class="card-inner">
         <div class="card-counter">
           <span class="card-idx">${APP.idx + 1} / ${APP.cards.length}</span>
-          ${typeBadge}
         </div>
 
-        <div class="card-title">${esc(card.조문번호)}</div>
+        <div class="card-title">${esc(card.조문번호)}${esc(titleSuffix)}</div>
 
         ${hasHint ? `
           <div class="reveal-zone hint-zone ${APP.hintShown ? 'visible' : ''}">
