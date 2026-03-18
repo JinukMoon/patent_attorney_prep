@@ -28,7 +28,7 @@ function buildCards() {
     const key = item.id;
     merged.set(key, {
       key, 조문번호: item.id, 요약: item.요약, 취지: item.취지,
-      두문자: '', 상세: '', 문장: '', sources: ['간략'],
+      두문자: item.두문자 || '', 상세: '', 문장: '', sources: ['간략'],
     });
   }
 
@@ -163,8 +163,8 @@ function render() {
     return;
   }
 
-  const hasHint = card.두문자 || card.요약;
-  const hasAnswer = card.문장 || card.상세;
+  const hasHint = !!card.두문자;
+  const hasAnswer = card.요약 || card.문장 || card.상세;
 
   app.innerHTML = `
     ${renderHeader()}
@@ -186,8 +186,7 @@ function render() {
           <div class="reveal-zone hint-zone ${APP.hintShown ? 'visible' : ''}">
             <div class="zone-inner">
               <div class="zone-tag">Hint</div>
-              ${card.두문자 ? `<div class="acronym-display">${esc(card.두문자)}</div>` : ''}
-              ${card.요약 ? `<div class="summary-text">${esc(card.요약)}</div>` : ''}
+              <div class="acronym-display">${esc(card.두문자)}</div>
             </div>
           </div>
         ` : ''}
@@ -196,10 +195,14 @@ function render() {
           <div class="reveal-zone answer-zone ${APP.answerShown ? 'visible' : ''}">
             <div class="zone-inner">
               <div class="zone-tag">Answer</div>
-              ${card.문장 ? `<div class="answer-text">${esc(card.문장)}</div>` : ''}
-              ${card.상세 && card.상세 !== card.문장 ? `
-                ${card.문장 ? '<div class="answer-divider"></div>' : ''}
+              ${card.요약 ? `<div class="answer-text summary-answer">${esc(card.요약)}</div>` : ''}
+              ${card.상세 ? `
+                ${card.요약 ? '<div class="answer-divider"></div>' : ''}
                 <div class="answer-text">${highlightAcronym(card.상세, card.두문자)}</div>
+              ` : ''}
+              ${card.문장 && card.문장 !== card.상세 ? `
+                <div class="answer-divider"></div>
+                <div class="answer-text">${esc(card.문장)}</div>
               ` : ''}
             </div>
           </div>
