@@ -413,6 +413,12 @@ body {
   word-break: keep-all;
 }
 
+mark.hl {
+  background: transparent;
+  color: var(--gold-bright);
+  font-weight: 700;
+}
+
 .answer-divider {
   height: 1px;
   background: var(--border);

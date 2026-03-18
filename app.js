@@ -199,7 +199,7 @@ function render() {
               ${card.문장 ? `<div class="answer-text">${esc(card.문장)}</div>` : ''}
               ${card.상세 && card.상세 !== card.문장 ? `
                 ${card.문장 ? '<div class="answer-divider"></div>' : ''}
-                <div class="answer-text">${esc(card.상세)}</div>
+                <div class="answer-text">${highlightAcronym(card.상세, card.두문자)}</div>
               ` : ''}
             </div>
           </div>
@@ -300,6 +300,27 @@ function esc(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/\n/g, '<br>');
+}
+
+function highlightAcronym(text, acronym) {
+  if (!text || !acronym) return esc(text);
+  const chars = acronym.replace(/[·\s·&/,()（）\d\-+\[\]]/g, '').split('');
+  if (chars.length === 0) return esc(text);
+
+  let result = '';
+  let charIdx = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (charIdx < chars.length && c === chars[charIdx]) {
+      result += `<mark class="hl">${esc(c)}</mark>`;
+      charIdx++;
+    } else if (c === '\n') {
+      result += '<br>';
+    } else {
+      result += esc(c);
+    }
+  }
+  return result;
 }
 
 // ===== Keyboard =====
