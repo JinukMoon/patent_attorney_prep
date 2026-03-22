@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trademark-quiz-v1';
+const CACHE_NAME = 'patent-attorney-v2';
 const BASE_PATH = '/patent_attorney_prep';
 
 const ASSETS_TO_CACHE = [
@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
   `${BASE_PATH}/app.js`,
   `${BASE_PATH}/style.css`,
   `${BASE_PATH}/data/상표법_암기자료.json`,
+  `${BASE_PATH}/data/특허법_암기자료.json`,
   `${BASE_PATH}/icons/icon-192.png`,
   `${BASE_PATH}/icons/icon-512.png`
 ];

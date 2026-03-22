@@ -1,7 +1,7 @@
 {
-  "name": "상표법 암기카드",
-  "short_name": "상표법",
-  "description": "변리사 2차 시험 상표법 플래시카드",
+  "name": "변리사 암기카드",
+  "short_name": "변리사",
+  "description": "변리사 2차 시험 상표법/특허법 플래시카드",
   "id": "/patent_attorney_prep/",
   "start_url": "/patent_attorney_prep/",
   "scope": "/patent_attorney_prep/",

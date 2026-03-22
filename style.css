@@ -620,12 +620,91 @@ mark.hl {
   }
 }
 
+/* ===== SUBJECT TABS ===== */
+.subject-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 4px;
+}
+
+.subject-tab {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-out-expo);
+  text-align: center;
+  border-bottom: 2px solid transparent;
+}
+
+.subject-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* ===== PATENT CATEGORY TABS ===== */
+.patent-cats {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.patent-cats .mode-tab {
+  flex: 0 1 auto;
+  padding: 7px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ===== PATENT CARD STYLES ===== */
+.field-label-question {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--teal);
+  padding: 8px 0;
+  letter-spacing: 0.5px;
+}
+
+.category-badge {
+  background: rgba(201, 168, 76, 0.1);
+  color: var(--gold);
+}
+
+.field-progress {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.field-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  transition: all 0.3s var(--ease-out-expo);
+}
+
+.field-dot.current {
+  background: var(--teal);
+  box-shadow: 0 0 8px rgba(61, 214, 200, 0.4);
+}
+
+.field-dot.done {
+  background: var(--green);
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 360px) {
   .card-title { font-size: 24px; }
   .acronym-display { font-size: 28px; }
   .card-inner { padding: 20px 18px 16px; }
   .card-actions { padding: 0 18px 16px; }
+  .patent-cats .mode-tab { font-size: 11px; padding: 6px 8px; }
 }
 
 @media (min-width: 768px) {
